@@ -1,0 +1,65 @@
+- Document the steps you followed, including any commands run, and challenges encountered.
+
+Steps followed to perform the task:
+
+1. Install and setup docker desktop
+2. Install and setup, debug  WSL
+3. check the docker engine status, docker info and version
+4. install and setup minikube
+   download the release and run the setup wizard, run minikube start , status
+5. install helm, chocolatey and kubectl
+6. verify proper installations of all the dependencies and prerequsites.
+7. create a directory structure for the application and helm chart
+8. Take sample hello world snippet and dcokerfile from the internet
+9. Run the "docker build -t imagename:version ." command to build the file
+10.Tag the docker image in order to push to dockerhub using "docker tag imagename:version username/repo/version
+11. push the image to docker hub using "docker push username:repo:tagversion"
+12. create Chart.yaml,values.yaml,templates---> deployment.yaml,service.yaml and ingress.yaml
+13. put the appropriate values in the values.yaml file and verify the same 
+14. create a secret to authenticate with my private docker registry where the docker image is present. this is required by Kubernetes to pull the image.
+15. run "helm install releasename ."
+16. check if the pods are up and running using "kubectl get pods".
+17. Add the ingress on minikube using "minikube addons enable ingress"
+18. check if the ingress is up and running using "kubectl get ingress" and check the hostname and the ip address
+19. Run "curl http://localhost" as localhost is the host configured in my ingress.yaml.
+20. verify the same on browser typing "localhost"
+21. Now change the message to hello world, helm rollout and rollback test in server.js
+22. Build the docker image again, tag and push it to the docker hub
+23. Now update the Chart.yaml with versions and values.yaml with the new image version
+24. Run "helm upgrade releasename ."
+25. verify the pod status using "kubectl get pod"
+26. Run curl command to see if you see the updated image
+27. i ran into an issue here since i tagged the image inappropriately and pushed to dockerhub later right tag was pushed to the registry and again helm upgrade is done which fixed the issue.
+28.  Now, run "helm rollback releasename revision number" to rollback to previous version --> helm rollback eclatnodetestapp 1
+29. run curl cmd to verify and check the same thing on the browser as well if needed 
+30. i also ran into another issue which is related to minikube d_rsa file permissions , fixed it by providing appropriate permissions
+31. i changed the node image to a minimal one since the node 14 was taking longer
+
+- Write a brief explanation of how you would adapt this deployment for a production environment
+(consider aspects like scalability, security, monitoring).
+
+1. Add layer 7 loadbalancer and associate WAF and sheild to ensure security and high availability of the load balancer by provisioning in multi AZ's and the ingress rules can also be managed through AWS load balancer. Not only routing rules but also TLS and seamless certificate management through ACM (AWS certificate manager). load balancer also does the load balancing which is needed in a production setup to handle the dynamic spike in the traffic automatically without management overhead. the default alogorithm it uses is round robin but can be configured according to the use case. Lot of other features to handle graceful shutdown, draining connections, inflight connections and metrics, monitoring inputs. AWS WAF and sheid have some default rules and allows customization.
+2. Add Hpa.yaml to handle pod autoscaling horizontally based on specific thresholds and add liveliness probe, readiness probe to check if the pod is ready to handle traffic kind of health check. vertical autoscaling is not preferred due to the restart drawback and can be implemented when possible.
+3. Add taints and tolerations for pod placements on nodes if there are specific pods that have to be scheduled on to a specific node rules according to that will be defined.
+4. Enforce pod security and network policies , role based access control to ensure granular access to prod resources.
+5. Integrate a service mesh, deploy a side car container if monitoring agents have to be setup like Prometheus and opentelemtry, new relic for monitoring and observability purposes to debug any issues.
+6. service maps are important in distributed architectures to find out where exactly the issue occurred, this can be achieved through new relic or x ray
+7. the Kubernetes control plane comes with high availability when hosted on AWS here it is a single node and risk of single point failure is high.
+8. Create volumes and configure pvcs, (persistent volume claims), storage class ,  for stateful workloads and configure namespaces in the cluster
+9. Add VPC, subnets and private subnets for databases and backend services , security groups and NACL for network level security
+10. Autoscaling to scale out dynamically and load balancing to distribute the traffic to the autoscaled pods and nodes
+11. Implement a ci/cd pipeline for automated deployments traditionally or using GitOps, end to end pipeline according to best practices integrated testing and vulnerability scanning, pull request , code reviews and proper release management and versioning
+12. current scenario just have one path which is the root where hello world is displayed but in prod there will be multiple paths and routing rule in these cases the range feature has to be used to loop through the rules and apply, a helpers file and and other dependency charts will be added in the charts directory and other improvisations in the templating.
+13. secrets management using aws secret manager or the built in way to handle secrets
+14. setup backups for data to recover in case of a disaster and deploy the infrastructure using terraform/iac to handle multiple environments and easier recovery of infra during a disaster
+15. Enforce circuit breaker, auto rollback if current version of code runs into issues or container fail to start due to image issues and boottime issues and other  and proper resource management and have cluster autoscaling as well.
+16. Implement tags for sure in the yaml files 
+17. choose appropriate instance types for the nodes according to the workload
+18. patch management and use minimal and signed images to reduce the surface attacks  wrt security factor.
+19. Implement multi tenant architecture keeping in mind the cost factor as well as the isolation parameter.
+20. use the helm create command to create the helm chart rather than manually creating since it will generate the files according to the best practices and all the required manifests files inside templates.
+21. Develop the Dockerfile with multistage and signed images, and non root user use and have ignore files in place to optimze the image size and enhance security. 
+22. Enable autohealing for the production nodes.
+23. setup alerting for the prod applications and escalate and resolve as needed and have an incident and risk management process defined.
+24. Implement runbooks to resolve issues as much as possible.
+
